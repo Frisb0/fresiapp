@@ -12,8 +12,6 @@ El proyecto está formalmente alineado con el **Objetivo de Desarrollo Sostenibl
 * **Interfaz Accesible para el Adulto Mayor:** Diseño gráfico simplificado basado en botones de gran tamaño, tipografías de alta visibilidad, contrastes marcados y navegación intuitiva de pocos pasos para reducir la brecha digital.
 * **Sistema de Alertas de Frescura:** Indicadores cromáticos dentro del inventario que alertan sobre la antigüedad o proximidad de marchitamiento de lotes específicos de flores.
 
----
-
 ## Stack Tecnológico
 
 * **Framework:** Flutter (Dart)
