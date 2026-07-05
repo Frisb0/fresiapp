@@ -1,17 +1,22 @@
-# fresiapp
+# FresiApp 🌹📱
 
-A new Flutter project.
+**FresiApp** es una solución tecnológica modular e híbrida diseñada y desarrollada para que los dueños de florerías locales en Chile puedan llevar un control efectivo, exacto y en tiempo real de su inventario, mitigando las pérdidas ocasionadas por mermas botánicas no cuantificadas y optimizando la reposición de stock.
 
-## Getting Started
+El proyecto está formalmente alineado con el **Objetivo de Desarrollo Sostenible 8 (ODS 8) de la ONU**, fomentando la modernización, la eficiencia productiva y la sostenibilidad económica de las microempresas menoristas que tradicionalmente dependen del lápiz y papel.
 
-This project is a starting point for a Flutter application.
+## Características Principales
 
-A few resources to get you started if this is your first Flutter project:
+* **Gestión de Productos Completa (CRUD):** Módulo centralizado que permite añadir, modificar, renombrar y dar de baja existencias del catálogo de flores de forma ágil y flexible.
+* **Calculadora de Venta Rápida con Buscador:** Interfaz transaccional que lee el inventario vivo, calcula subtotales dinámicamente y procesa boletas en un par de toques para evitar tiempos de espera.
+* **Resiliencia y Operación 100% Offline:** Arquitectura de datos basada en persistencia local para garantizar que el flujo del negocio no se detenga ante inestabilidades de red.
+* **Interfaz Accesible para el Adulto Mayor:** Diseño gráfico simplificado basado en botones de gran tamaño, tipografías de alta visibilidad, contrastes marcados y navegación intuitiva de pocos pasos para reducir la brecha digital.
+* **Sistema de Alertas de Frescura:** Indicadores cromáticos dentro del inventario que alertan sobre la antigüedad o proximidad de marchitamiento de lotes específicos de flores.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Stack Tecnológico
+
+* **Framework:** Flutter (Dart)
+* **Persistencia de Datos:** SQLite (`sqflite` con transacciones de rollback seguro)
+* **Entorno de Desarrollo:** Visual Studio Code / Android Studio (Android SDK)
+* **Plataforma Objetivo:** Android Nativo (Compilación optimizada mediante Split APK)
