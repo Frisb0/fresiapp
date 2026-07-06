@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart'; // [✓] SOLUCIÓN: Corrige el error de "Undefined class 'Database'"
+import 'package:sqflite/sqflite.dart';
 import 'db_helper.dart';
 
 class ProductosScreen extends StatefulWidget {
@@ -128,13 +128,13 @@ class _ProductosScreenState extends State<ProductosScreen> {
     );
   }
 
-  // Eliminar físicamente un producto del stock local
   void _eliminarProducto(int id) async {
     Database db = await DBHelper.instance.database;
     await db.delete('productos', where: "id = ?", whereArgs: [id]);
 
-    if (!mounted)
-      return; // [✓] SOLUCIÓN: Previene errores si el widget se destruyó en el proceso de borrado
+    if (!mounted) {
+      return;
+    }
     _refreshProductos();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('🗑️ Producto eliminado del inventario.')),

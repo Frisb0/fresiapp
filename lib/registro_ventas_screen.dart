@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart'; // Importante para la comunicación nativa de tipos con el CRUD
+import 'package:sqflite/sqflite.dart';
 import 'db_helper.dart';
 
 class RegistroVentasScreen extends StatefulWidget {
-  const RegistroVentasScreen({super.key});
+  final String usuarioActivo; // [✓] Recibe de forma obligatoria el usuario logueado
+
+  const RegistroVentasScreen({super.key, required this.usuarioActivo});
 
   @override
   State<RegistroVentasScreen> createState() => _RegistroVentasScreenState();
@@ -37,7 +39,7 @@ class _RegistroVentasScreenState extends State<RegistroVentasScreen> {
     await db.delete('ventas', where: "id = ?", whereArgs: [id]);
     _cargarHistorialVentas();
     
-    if (!mounted) return; 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('🗑️ Registro de venta eliminado del historial.')),
     );

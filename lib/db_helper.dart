@@ -3,7 +3,7 @@ import 'package:path/path.dart';
 
 class DBHelper {
   static const _databaseName = "fresi_database.db";
-  static const _databaseVersion = 1;
+  static const _databaseVersion = 2;
 
   DBHelper._privateConstructor();
   static final DBHelper instance = DBHelper._privateConstructor();
@@ -17,12 +17,26 @@ class DBHelper {
 
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), _databaseName);
-    return await openDatabase(path,
-        version: _databaseVersion,
-        onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: _databaseVersion,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
   }
 
-  // Creación de tablas limpias y relacionales
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE usuarios (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL
+        )
+      ''');
+    }
+  }
+
   Future _onCreate(Database db, int version) async {
     await db.execute('''
           CREATE TABLE productos (
@@ -42,10 +56,36 @@ class DBHelper {
             total REAL NOT NULL
           )
           ''');
+
+    await db.execute('''
+          CREATE TABLE usuarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+          )
+          ''');
   }
 
-  // --- Operaciones del Inventario ---
-  Future<List<Map<String, dynamic>>> obtenerProductos() async {
+  Future<int> registrarUsuario(String username, String password) async {
+    Database db = await instance.database;
+    try {
+      return await db.insert('usuarios', {'username': username, 'password': password});
+    } catch (e) {
+      return -1; 
+    }
+  }
+
+  Future<bool> verificarLogin(String username, String password) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> res = await db.query(
+      'usuarios',
+      where: 'username = ? AND password = ?',
+      whereArgs: [username, password],
+    );
+    return res.isNotEmpty;
+  }
+
+  Future<List<Map<String, dynamic>> > obtenerProductos() async {
     Database db = await instance.database;
     return await db.query('productos');
   }
@@ -55,29 +95,25 @@ class DBHelper {
     return await db.insert('productos', {'nombre': nombre, 'precio': precio, 'stock': stock});
   }
 
-  // --- Mecanismo de Transacción SQL (Venta Completa) ---
-  Future<bool> registrarVenta(List<Map<String, dynamic>> items, double total) async {
+  Future<bool> registrarVenta(List<Map<String, dynamic>> items, double total, String usuarioActivo) async {
     Database db = await instance.database;
     try {
       await db.transaction((txn) async {
-        // 1. Guardar la cabecera de la venta
         await txn.insert('ventas', {
-          'usuario': 'Fresia',
+          'usuario': usuarioActivo, 
           'fecha_hora': DateTime.now().toString().substring(0, 16),
           'total': total,
         });
 
-        // 2. Descontar el stock de cada producto vendido
         for (var item in items) {
           int idProd = item['id'];
           int cantidadVendida = item['cantidad'];
 
-          // Obtener el stock actual en la transacción
           List<Map<String, dynamic>> res = await txn.query('productos', where: 'id = ?', whereArgs: [idProd]);
           int stockActual = res.first['stock'];
 
           if (stockActual < cantidadVendida) {
-            throw Exception("Stock insuficiente para el producto ID $idProd");
+            throw Exception("Stock insuficiente");
           }
 
           await txn.update(
@@ -88,10 +124,9 @@ class DBHelper {
           );
         }
       });
-      return true; // Transmisión/Commit exitoso
+      return true;
     } catch (e) {
-      print("Error en transacción (Ejecutando Rollback): $e");
-      return false; // Error gatilla Rollback automático de sqflite
+      return false;
     }
   }
 

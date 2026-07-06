@@ -52,7 +52,6 @@ class _InventarioScreenState extends State<InventarioScreen> {
                       child: Table(
                         border: TableBorder.all(color: Colors.black26, width: 1),
                         children: [
-                          // Cabecera de la tabla con textos grandes (Ajuste #3)
                           TableRow(
                             decoration: BoxDecoration(color: Colors.grey[200]),
                             children: [
@@ -86,7 +85,7 @@ class _InventarioScreenState extends State<InventarioScreen> {
                                 ),
                               ],
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
                     ),

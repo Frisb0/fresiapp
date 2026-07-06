@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'db_helper.dart';
 
 class CalculadoraVentaScreen extends StatefulWidget {
-  const CalculadoraVentaScreen({super.key});
+  final String usuarioActivo; // Recibe de forma modular el vendedor logueado
+
+  const CalculadoraVentaScreen({super.key, required this.usuarioActivo});
 
   @override
   State<CalculadoraVentaScreen> createState() => _CalculadoraVentaScreenState();
@@ -30,8 +32,7 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
 
   void _cargarProductos() async {
     final datos = await DBHelper.instance.obtenerProductos();
-    if (!mounted) return; 
-    
+    if (!mounted) return;
     setState(() {
       _productosDisponibles = datos;
       if (_idProductoSeleccionado != null && 
@@ -51,7 +52,6 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
       _carritoVenta.add({
         'id': prod['id'],
         'nombre': prod['nombre'],
-        'customer_quantity': cantidad,
         'cantidad': cantidad,
         'subtotal': prod['precio'] * cantidad
       });
@@ -60,10 +60,18 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
     });
   }
 
+  void _eliminarDelCarrito(int index) {
+    setState(() {
+      _precioFinalTotal -= _carritoVenta[index]['subtotal'];
+      _carritoVenta.removeAt(index);
+    });
+  }
+
   void _procesarVentaReal() async {
     if (_carritoVenta.isEmpty) return;
 
-    bool exito = await DBHelper.instance.registrarVenta(_carritoVenta, _precioFinalTotal);
+    // [✓] Enviamos 'widget.usuarioActivo' para que guarde tu login real (ej: "Aaron") en SQLite
+    bool exito = await DBHelper.instance.registrarVenta(_carritoVenta, _precioFinalTotal, widget.usuarioActivo);
 
     if (!mounted) return;
 
@@ -76,7 +84,7 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
         _precioFinalTotal = 0.0;
         _idProductoSeleccionado = null;
       });
-      _cargarProductos();
+      _cargarProductos(); 
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Error en la venta: Stock insuficiente o transacción cancelada.')),
@@ -100,7 +108,7 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
             Row(
               children: [
                 Expanded(
-                  flex: 1,
+                  flex: 2,
                   child: TextField(
                     controller: _cantidadController,
                     keyboardType: TextInputType.number,
@@ -115,7 +123,8 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
                 Expanded(
                   flex: 5,
                   child: DropdownButtonFormField<String>(
-                    isExpanded: true, 
+                    isExpanded: true,
+                    // [✓] SOLUCIÓN: Reemplazado 'initialValue' por 'value' para corregir la advertencia del linter
                     value: _idProductoSeleccionado,
                     decoration: InputDecoration(
                       labelText: 'Producto',
@@ -124,7 +133,7 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
                     items: _productosDisponibles.map((p) {
                       return DropdownMenuItem<String>(
                         value: p['id'].toString(),
-                        child: Text('${p['nombre']} (\$${p['precio']})'),
+                        child: Text('${p['nombre']} (\$${p['precio']})', overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -144,20 +153,24 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green[100], foregroundColor: Colors.black87),
             ),
             const SizedBox(height: 15),
-            
             Expanded(
-              child: ListView.builder(
-                itemCount: _carritoVenta.length,
-                itemBuilder: (context, idx) {
-                  final item = _carritoVenta[idx];
-                  return ListTile(
-                    title: Text('${item['nombre']} x${item['cantidad']}'),
-                    trailing: Text('\$${item['subtotal']}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  );
-                },
-              ),
+              child: _carritoVenta.isEmpty
+                  ? const Center(child: Text('El carrito está vacío.', style: TextStyle(fontSize: 16)))
+                  : ListView.builder(
+                      itemCount: _carritoVenta.length,
+                      itemBuilder: (context, idx) {
+                        final item = _carritoVenta[idx];
+                        return ListTile(
+                          title: Text('${item['nombre']} x${item['cantidad']}'),
+                          subtitle: Text('Subtotal: \$${item['subtotal']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _eliminarDelCarrito(idx),
+                          ),
+                        );
+                      },
+                    ),
             ),
-            
             const Divider(thickness: 2),
             const Text('Precio final total:', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             Text('\$ $_precioFinalTotal', style: const TextStyle(fontSize: 44, fontWeight: FontWeight.bold, color: Colors.green)),
