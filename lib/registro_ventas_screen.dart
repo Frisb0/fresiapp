@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'db_helper.dart';
 
 class RegistroVentasScreen extends StatefulWidget {
-  final String usuarioActivo; // [✓] Recibe de forma obligatoria el usuario logueado
+  final String usuarioActivo;
 
   const RegistroVentasScreen({super.key, required this.usuarioActivo});
 
@@ -59,12 +59,7 @@ class _RegistroVentasScreenState extends State<RegistroVentasScreen> {
           children: [
             Expanded(
               child: _ventasHistorial.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No se han registrado transacciones aún.', 
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    )
+                  ? const Center(child: Text('No se han registrado transacciones aún.', style: TextStyle(fontSize: 16)))
                   : ListView.builder(
                       itemCount: _ventasHistorial.length,
                       itemBuilder: (context, index) {
@@ -75,14 +70,9 @@ class _RegistroVentasScreenState extends State<RegistroVentasScreen> {
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundColor: Colors.green[100],
-                              child: Text(
-                                '#${venta['id']}', 
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
-                              ),
+                              child: Text('#${venta['id']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
                             ),
-                            title: Text(
-                              'Total Cobrado: \$${venta['total']}', 
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            title: Text('Total Cobrado: \$${(venta['total'] as num).toInt()}', // [✓] Remueve el ".0" del historialstyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                             subtitle: Text('Atendido por: ${venta['usuario']}\nFecha: ${venta['fecha_hora']}'),
                             trailing: IconButton(

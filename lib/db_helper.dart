@@ -2,8 +2,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DBHelper {
-  static const _databaseName = "fresi_database.db";
-  static const _databaseVersion = 2;
+  static const _databaseName = "fresi_database_v3.db";
+  static const _databaseVersion = 1;
 
   DBHelper._privateConstructor();
   static final DBHelper instance = DBHelper._privateConstructor();
@@ -15,36 +15,24 @@ class DBHelper {
     return _database!;
   }
 
-  Future<Database> _initDatabase() async {
+  _initDatabase() async {
     String path = join(await getDatabasesPath(), _databaseName);
     return await openDatabase(
       path,
       version: _databaseVersion,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
     );
-  }
-
-  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('''
-        CREATE TABLE usuarios (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          username TEXT UNIQUE NOT NULL,
-          password TEXT NOT NULL
-        )
-      ''');
-    }
   }
 
   Future _onCreate(Database db, int version) async {
     await db.execute('''
           CREATE TABLE productos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL,
+            nombre TEXT UNIQUE NOT NULL,
             precio REAL NOT NULL,
             stock INTEGER NOT NULL,
-            dias_frescura INTEGER DEFAULT 7
+            dias_frescura INTEGER DEFAULT 7,
+            fecha_ingreso TEXT NOT NULL
           )
           ''');
 
@@ -64,6 +52,18 @@ class DBHelper {
             password TEXT NOT NULL
           )
           ''');
+
+    // Obtener fecha del sistema de forma segura
+    String fechaHoy = DateTime.now().toString().substring(8, 10) + "/" + DateTime.now().toString().substring(5, 7);
+    
+    // Inserción de productos de muestra para auditoría (Merma y Quiebre de Stock)
+    await db.rawInsert('INSERT INTO productos(nombre, precio, stock, dias_frescura, fecha_ingreso) VALUES("Girasoles", 12000, 45, 6, "$fechaHoy")');
+    await db.rawInsert('INSERT INTO productos(nombre, precio, stock, dias_frescura, fecha_ingreso) VALUES("Rosas Rojas", 15000, 3, 5, "$fechaHoy")');
+    await db.rawInsert('INSERT INTO productos(nombre, precio, stock, dias_frescura, fecha_ingreso) VALUES("Tulipanes", 18000, 20, 1, "02/07")');
+    
+    // Cuentas de acceso base
+    await db.rawInsert('INSERT INTO usuarios(username, password) VALUES("Fresia", "1234")');
+    await db.rawInsert('INSERT INTO usuarios(username, password) VALUES("admin", "admin")');
   }
 
   Future<int> registrarUsuario(String username, String password) async {
@@ -71,7 +71,7 @@ class DBHelper {
     try {
       return await db.insert('usuarios', {'username': username, 'password': password});
     } catch (e) {
-      return -1; 
+      return -1;
     }
   }
 
@@ -85,14 +85,43 @@ class DBHelper {
     return res.isNotEmpty;
   }
 
-  Future<List<Map<String, dynamic>> > obtenerProductos() async {
-    Database db = await instance.database;
-    return await db.query('productos');
-  }
-
   Future<int> insertarProducto(String nombre, double precio, int stock) async {
     Database db = await instance.database;
-    return await db.insert('productos', {'nombre': nombre, 'precio': precio, 'stock': stock});
+    String fechaHoy = DateTime.now().toString().substring(8, 10) + "/" + DateTime.now().toString().substring(5, 7);
+
+    List<Map<String, dynamic>> existente = await db.query(
+      'productos',
+      where: 'LOWER(nombre) = ?',
+      whereArgs: [nombre.toLowerCase().trim()],
+    );
+
+    if (existente.isNotEmpty) {
+      int idExistente = existente.first['id'];
+      int stockActual = existente.first['stock'];
+      
+      return await db.update(
+        'productos',
+        {
+          'stock': stockActual + stock,
+          'precio': precio,
+          'fecha_ingreso': fechaHoy
+        },
+        where: 'id = ?',
+        whereArgs: [idExistente],
+      );
+    } else {
+      return await db.insert('productos', {
+        'nombre': nombre.trim(),
+        'precio': precio,
+        'stock': stock,
+        'fecha_ingreso': fechaHoy
+      });
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> obtenerProductos() async {
+    Database db = await instance.database;
+    return await db.query('productos');
   }
 
   Future<bool> registrarVenta(List<Map<String, dynamic>> items, double total, String usuarioActivo) async {
@@ -100,7 +129,7 @@ class DBHelper {
     try {
       await db.transaction((txn) async {
         await txn.insert('ventas', {
-          'usuario': usuarioActivo, 
+          'usuario': usuarioActivo,
           'fecha_hora': DateTime.now().toString().substring(0, 16),
           'total': total,
         });

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'db_helper.dart';
 
 class CalculadoraVentaScreen extends StatefulWidget {
-  final String usuarioActivo; // Recibe de forma modular el vendedor logueado
+  final String usuarioActivo;
 
   const CalculadoraVentaScreen({super.key, required this.usuarioActivo});
 
@@ -70,7 +70,6 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
   void _procesarVentaReal() async {
     if (_carritoVenta.isEmpty) return;
 
-    // [✓] Enviamos 'widget.usuarioActivo' para que guarde tu login real (ej: "Aaron") en SQLite
     bool exito = await DBHelper.instance.registrarVenta(_carritoVenta, _precioFinalTotal, widget.usuarioActivo);
 
     if (!mounted) return;
@@ -124,7 +123,6 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
                   flex: 5,
                   child: DropdownButtonFormField<String>(
                     isExpanded: true,
-                    // [✓] SOLUCIÓN: Reemplazado 'initialValue' por 'value' para corregir la advertencia del linter
                     value: _idProductoSeleccionado,
                     decoration: InputDecoration(
                       labelText: 'Producto',
@@ -133,7 +131,7 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
                     items: _productosDisponibles.map((p) {
                       return DropdownMenuItem<String>(
                         value: p['id'].toString(),
-                        child: Text('${p['nombre']} (\$${p['precio']})', overflow: TextOverflow.ellipsis),
+                        child: Text('${p['nombre']} (\$${(p['precio'] as num).toInt()})', overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -162,7 +160,7 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
                         final item = _carritoVenta[idx];
                         return ListTile(
                           title: Text('${item['nombre']} x${item['cantidad']}'),
-                          subtitle: Text('Subtotal: \$${item['subtotal']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text('Subtotal: \$${(item['subtotal'] as num).toInt()}', style: const TextStyle(fontWeight: FontWeight.bold)),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () => _eliminarDelCarrito(idx),
@@ -173,8 +171,7 @@ class _CalculadoraVentaScreenState extends State<CalculadoraVentaScreen> {
             ),
             const Divider(thickness: 2),
             const Text('Precio final total:', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            Text('\$ $_precioFinalTotal', style: const TextStyle(fontSize: 44, fontWeight: FontWeight.bold, color: Colors.green)),
-            const SizedBox(height: 15),
+            Text('\$ ${_precioFinalTotal.toInt()}', style: const TextStyle(fontSize: 44, fontWeight: FontWeight.bold, color: Colors.green)),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,

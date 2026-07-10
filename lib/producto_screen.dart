@@ -18,7 +18,7 @@ class _ProductosScreenState extends State<ProductosScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _refreshProductos(); 
+    _refreshProductos();
   }
 
   @override
@@ -34,12 +34,10 @@ class _ProductosScreenState extends State<ProductosScreen> {
       _productos = data;
     });
   }
-  
+
   void _mostrarFormulario(int? id) async {
     if (id != null) {
-      final productoExistente = _productos.firstWhere(
-        (element) => element['id'] == id,
-      );
+      final productoExistente = _productos.firstWhere((element) => element['id'] == id);
       _nombreController.text = productoExistente['nombre'];
       _precioController.text = productoExistente['precio'].toString();
       _stockController.text = productoExistente['stock'].toString();
@@ -68,30 +66,14 @@ class _ProductosScreenState extends State<ProductosScreen> {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 15),
-            TextField(
-              controller: _nombreController,
-              decoration: const InputDecoration(
-                labelText: 'Nombre del Producto',
-              ),
-            ),
+            TextField(controller: _nombreController, decoration: const InputDecoration(labelText: 'Nombre del Producto')),
             const SizedBox(height: 10),
-            TextField(
-              controller: _precioController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Precio Unitario'),
-            ),
+            TextField(controller: _precioController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Precio Unitario')),
             const SizedBox(height: 10),
-            TextField(
-              controller: _stockController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Cantidad de Stock'),
-            ),
+            TextField(controller: _stockController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Cantidad de Stock')),
             const SizedBox(height: 20),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
               onPressed: () async {
                 final nombre = _nombreController.text;
                 final precio = double.tryParse(_precioController.text) ?? 0.0;
@@ -100,16 +82,18 @@ class _ProductosScreenState extends State<ProductosScreen> {
                 if (nombre.isEmpty || precio <= 0 || stock < 0) return;
 
                 if (id == null) {
-                  await DBHelper.instance.insertarProducto(
-                    nombre,
-                    precio,
-                    stock,
-                  );
+                  await DBHelper.instance.insertarProducto(nombre, precio, stock);
                 } else {
+                  String fechaHoy = DateTime.now().toString().substring(8, 10) + "/" + DateTime.now().toString().substring(5, 7);
                   Database db = await DBHelper.instance.database;
                   await db.update(
                     'productos',
-                    {'nombre': nombre, 'precio': precio, 'stock': stock},
+                    {
+                      'nombre': nombre.trim(),
+                      'precio': precio,
+                      'stock': stock,
+                      'fecha_ingreso': fechaHoy
+                    },
                     where: "id = ?",
                     whereArgs: [id],
                   );
@@ -132,9 +116,7 @@ class _ProductosScreenState extends State<ProductosScreen> {
     Database db = await DBHelper.instance.database;
     await db.delete('productos', where: "id = ?", whereArgs: [id]);
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     _refreshProductos();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('🗑️ Producto eliminado del inventario.')),
@@ -145,10 +127,7 @@ class _ProductosScreenState extends State<ProductosScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Gestión de Productos',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Gestión de Productos', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
       ),
@@ -159,15 +138,10 @@ class _ProductosScreenState extends State<ProductosScreen> {
               itemBuilder: (context, index) {
                 final prod = _productos[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 8,
-                  ),
+                  margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: prod['stock'] == 0
-                          ? Colors.red[100]
-                          : Colors.green[100],
+                      backgroundColor: prod['stock'] == 0 ? Colors.red[100] : Colors.green[100],
                       child: Text(
                         '${prod['stock']}',
                         style: TextStyle(
@@ -176,25 +150,13 @@ class _ProductosScreenState extends State<ProductosScreen> {
                         ),
                       ),
                     ),
-                    title: Text(
-                      prod['nombre'],
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    title: Text(prod['nombre'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     subtitle: Text('Precio Unitario: \$${prod['precio']}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _mostrarFormulario(prod['id']),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _eliminarProducto(prod['id']),
-                        ),
+                        IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => _mostrarFormulario(prod['id'])),
+                        IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _eliminarProducto(prod['id'])),
                       ],
                     ),
                   ),

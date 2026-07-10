@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart'; // [✓] Importamos el nuevo Login
+import 'login_screen.dart';
 import 'inventario_screen.dart';
 import 'registro_ventas_screen.dart';
 import 'calculadora_venta_screen.dart';
 import 'producto_screen.dart';
 
-final ValueNotifier<ThemeMode> temaClaroOscuroNotifier = ValueNotifier(
-  ThemeMode.dark,
-);
+final ValueNotifier<ThemeMode> temaClaroOscuroNotifier = ValueNotifier(ThemeMode.dark);
 
 void main() {
   runApp(const FresiApp());
@@ -20,7 +18,7 @@ class FresiApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: temaClaroOscuroNotifier,
-      builder: (_, mode, _) {
+      builder: (_, mode, __) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'FresiApp',
@@ -29,19 +27,13 @@ class FresiApp extends StatelessWidget {
             brightness: Brightness.light,
             primarySwatch: Colors.green,
             scaffoldBackgroundColor: Colors.white,
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
+            appBarTheme: const AppBarTheme(backgroundColor: Colors.green, foregroundColor: Colors.white),
           ),
           darkTheme: ThemeData(
             brightness: Brightness.dark,
             primarySwatch: Colors.green,
             scaffoldBackgroundColor: const Color(0xFF121212),
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
+            appBarTheme: const AppBarTheme(backgroundColor: Colors.green, foregroundColor: Colors.white),
           ),
           home: const LoginScreen(),
         );
@@ -53,7 +45,7 @@ class FresiApp extends StatelessWidget {
 class MenuPrincipal extends StatelessWidget {
   final String usuarioActivo;
 
-  const MenuPrincipal({super.key, this.usuarioActivo = 'Usuario'});
+  const MenuPrincipal({super.key, required this.usuarioActivo});
 
   @override
   Widget build(BuildContext context) {
@@ -61,27 +53,18 @@ class MenuPrincipal extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'FresiApp',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('FresiApp', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: Icon(esOscuro ? Icons.light_mode : Icons.dark_mode, size: 28),
             onPressed: () {
-              temaClaroOscuroNotifier.value = esOscuro
-                  ? ThemeMode.light
-                  : ThemeMode.dark;
+              temaClaroOscuroNotifier.value = esOscuro ? ThemeMode.light : ThemeMode.dark;
             },
           ),
-          // Botón de Cerrar Sesión seguro
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
             },
           ),
         ],
@@ -98,52 +81,32 @@ class MenuPrincipal extends StatelessWidget {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 40),
+            _crearBotonMenu(context, 'Inventario', Icons.inventory, Colors.grey[400]!, const InventarioScreen()),
+            const SizedBox(height: 15),
             _crearBotonMenu(
-              context,
-              'Inventario',
-              Icons.inventory,
-              Colors.grey[400]!,
-              const InventarioScreen(),
+              context, 
+              'Registro de ventas', 
+              Icons.assignment, 
+              Colors.grey[400]!, 
+              RegistroVentasScreen(usuarioActivo: usuarioActivo)
             ),
             const SizedBox(height: 15),
             _crearBotonMenu(
-              context,
-              'Registro de ventas',
-              Icons.assignment,
-              Colors.grey[400]!,
-              RegistroVentasScreen(usuarioActivo: usuarioActivo),
+              context, 
+              'Calculadora de venta', 
+              Icons.calculate, 
+              Colors.grey[400]!, 
+              CalculadoraVentaScreen(usuarioActivo: usuarioActivo)
             ),
             const SizedBox(height: 15),
-            _crearBotonMenu(
-              context,
-              'Calculadora de venta',
-              Icons.calculate,
-              Colors.grey[400]!,
-              CalculadoraVentaScreen(
-                usuarioActivo: usuarioActivo,
-              ),
-            ),
-            const SizedBox(height: 15),
-            _crearBotonMenu(
-              context,
-              'Agregar producto',
-              Icons.add_circle,
-              Colors.grey[400]!,
-              const ProductosScreen(),
-            ),
+            _crearBotonMenu(context, 'Agregar producto', Icons.add_circle, Colors.grey[400]!, const ProductosScreen()),
           ],
         ),
       ),
     );
   }
 
-  Widget _crearBotonMenu(
-    BuildContext context,
-    String texto,
-    IconData icono,
-    Color color,
-    Widget pantallaDestino,
-  ) {
+  Widget _crearBotonMenu(BuildContext context, String texto, IconData icono, Color color, Widget pantallaDestino) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
@@ -153,10 +116,7 @@ class MenuPrincipal extends StatelessWidget {
         textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
       onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => pantallaDestino),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => pantallaDestino));
       },
       icon: Icon(icono, size: 24),
       label: Text(texto),
